@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 
 class AurbitWebTheme {
-  static const accentPrimary = Color(0xFF7C3AED);
-  static const accentLight = Color(0xFFEDE9FE);
-  static const accentDark = Color(0xFF5B21B6);
+  // Dark Plum / Burgundy accent (Dribbble Travel UI inspired)
+  static const accentPrimary = Color(0xFF702D54);
+  static const accentLight = Color(0xFFF5E6EF);
+  static const accentDark = Color(0xFF4E1F3B);
 
-  static const lightBg = Color(0xFFEFF1F3);
+  // Nature-inspired background gradient stops
+  static const naturePeach = Color(0xFFF5D5C8);
+  static const natureGreen = Color(0xFF6B8F71);
+  static const natureTeal = Color(0xFF4A7C6F);
+  static const natureBeige = Color(0xFFF7EDE2);
+  static const natureSand = Color(0xFFEADBC8);
+
+  static const lightBg = Color(0xFFF7EDE2);
   static const lightCard = Color(0xFFFFFFFF);
   static const lightSidebar = Color(0xFFFFFFFF);
   static const lightTopbar = Color(0xFFFFFFFF);

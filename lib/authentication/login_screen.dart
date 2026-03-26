@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -26,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _isLoading = false;
   bool _otpSent = false;
+  bool _rememberMe = false;
   _LoginMode _loginMode = _LoginMode.password;
 
   @override
@@ -36,10 +39,10 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // ───────────────────── AUTH HANDLERS ─────────────────────
+
   Future<void> _handlePasswordLogin() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
     try {
@@ -53,9 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (_) {
       _showSnack('Unable to sign in right now.', isError: true);
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -71,22 +72,14 @@ class _LoginScreenState extends State<LoginScreen> {
         email: _emailCtrl.text.trim(),
         emailRedirectTo: _webRedirectTo,
       );
-      if (mounted) {
-        setState(() {
-          _otpSent = true;
-        });
-      }
-      _showSnack(
-        'Check your email for a code or sign-in link.',
-      );
+      if (mounted) setState(() => _otpSent = true);
+      _showSnack('Check your email for a code or sign-in link.');
     } on AuthException catch (error) {
       _showSnack(error.message, isError: true);
     } catch (_) {
       _showSnack('Unable to send the email code.', isError: true);
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -113,9 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (_) {
       _showSnack('Unable to verify the email code.', isError: true);
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -146,9 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (_) {
       _showSnack('Unable to start social sign-in.', isError: true);
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -163,10 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _switchMode(_LoginMode mode) {
-    if (_loginMode == mode) {
-      return;
-    }
-
+    if (_loginMode == mode) return;
     setState(() {
       _loginMode = mode;
       _otpSent = false;
@@ -180,29 +166,26 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   String? get _webRedirectTo {
-    if (!kIsWeb) {
-      return null;
-    }
-
+    if (!kIsWeb) return null;
     final base = Uri.base;
-    return base.replace(
-      queryParameters: <String, String>{},
-      fragment: '',
-    ).toString();
+    return base
+        .replace(queryParameters: <String, String>{}, fragment: '')
+        .toString();
   }
 
   void _showSnack(String message, {bool isError = false}) {
-    if (!mounted) {
-      return;
-    }
-
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
+        backgroundColor: isError ? Colors.red.shade400 : AurbitWebTheme.natureGreen,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
+
+  // ───────────────────── BUILD ─────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -211,141 +194,187 @@ class _LoginScreenState extends State<LoginScreen> {
     return isDesktop ? _buildWebLayout(isDark) : _buildMobileLayout(isDark);
   }
 
-  Widget _buildWebLayout(bool isDark) {
-    final background = isDark ? AurbitWebTheme.darkBg : AurbitWebTheme.lightBg;
+  // ─────────────── WEB LAYOUT ───────────────
 
+  Widget _buildWebLayout(bool isDark) {
     return Scaffold(
-      backgroundColor: background,
-      body: Row(
+      body: Stack(
         children: [
-          Expanded(
-            flex: 5,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isDark
-                      ? const [Color(0xFF1A0533), Color(0xFF0D0620)]
-                      : const [Color(0xFF7C3AED), Color(0xFF4F46E5)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 48,
-                    vertical: 48,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'A',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 24,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Aurbit',
-                            style: GoogleFonts.inter(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 28),
-                      Text(
-                        'Your space.\nYour pace.',
-                        style: GoogleFonts.inter(
-                          fontSize: 42,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          height: 1.15,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Use password, social sign-in, or a one-time email code to get back into your quiet space.',
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          color: Colors.white.withOpacity(0.78),
-                          height: 1.7,
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      ...const [
-                        'No public follower counts',
-                        'Mood-aware connections',
-                        'Private by design',
-                      ].map(
-                        (feature) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Color.fromRGBO(255, 255, 255, 0.12),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(24)),
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
-                              ),
-                              child: Text(
-                                feature,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+          // Full-bleed nature-inspired gradient background
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isDark
+                    ? const [Color(0xFF1A2A1F), Color(0xFF0F1A14), Color(0xFF0D0D12)]
+                    : const [
+                        Color(0xFFA8D5A2), // soft green
+                        Color(0xFFF5D5C8), // peach
+                        Color(0xFFF7EDE2), // beige
+                        Color(0xFFE8C9A0), // warm sand
+                      ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
             ),
           ),
-          Expanded(
-            flex: 4,
-            child: Container(
-              color:
-                  isDark ? AurbitWebTheme.darkCard : AurbitWebTheme.lightCard,
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 56,
-                    vertical: 48,
-                  ),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    child: _buildForm(isDark, isWeb: true),
-                  ),
+
+          // Decorative organic shapes
+          if (!isDark) ...[
+            Positioned(
+              top: -80,
+              right: -60,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AurbitWebTheme.natureGreen.withOpacity(0.15),
                 ),
               ),
+            ),
+            Positioned(
+              bottom: -100,
+              left: -80,
+              child: Container(
+                width: 350,
+                height: 350,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AurbitWebTheme.natureTeal.withOpacity(0.12),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 100,
+              left: 80,
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AurbitWebTheme.naturePeach.withOpacity(0.3),
+                ),
+              ),
+            ),
+          ],
+
+          // Hero text on the left
+          Positioned(
+            left: 60,
+            top: 50,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AurbitWebTheme.accentPrimary,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'A',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 22,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Aurbit',
+                      style: GoogleFonts.poppins(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : AurbitWebTheme.accentPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Centered tagline
+          Positioned(
+            left: 60,
+            bottom: 80,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Your space.\nYour pace.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 48,
+                    fontWeight: FontWeight.w800,
+                    color: isDark ? Colors.white70 : const Color(0xFF2D2D2D).withOpacity(0.2),
+                    height: 1.15,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...['✦  Private by design', '✦  Mood-aware connections', '✦  No public follower counts']
+                    .map(
+                  (f) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      f,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: isDark ? Colors.white54 : const Color(0xFF4A4A4A).withOpacity(0.5),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ──── Glassmorphism Login Card ────
+          Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 80),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                      child: Container(
+                        width: 420,
+                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 44),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.black.withOpacity(0.45)
+                              : Colors.white.withOpacity(0.75),
+                          borderRadius: BorderRadius.circular(28),
+                          border: Border.all(
+                            color: isDark
+                                ? Colors.white.withOpacity(0.08)
+                                : Colors.white.withOpacity(0.5),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 40,
+                              offset: const Offset(0, 16),
+                            ),
+                          ],
+                        ),
+                        child: SingleChildScrollView(
+                          child: _buildForm(isDark, isWeb: true),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -353,81 +382,108 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // ─────────────── MOBILE LAYOUT ───────────────
+
   Widget _buildMobileLayout(bool isDark) {
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          child: _buildForm(isDark, isWeb: false),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [const Color(0xFF1A2A1F), const Color(0xFF0D0D12)]
+                : [
+                    const Color(0xFFA8D5A2),
+                    const Color(0xFFF5D5C8),
+                    const Color(0xFFF7EDE2),
+                  ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 36),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.black.withOpacity(0.4)
+                          : Colors.white.withOpacity(0.78),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.06)
+                            : Colors.white.withOpacity(0.5),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 30,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
+                    ),
+                    child: _buildForm(isDark, isWeb: false),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
+  // ─────────────── FORM ───────────────
+
   Widget _buildForm(bool isDark, {required bool isWeb}) {
-    final textColor =
-        isDark ? AurbitWebTheme.darkText : AurbitWebTheme.lightText;
-    final subColor =
-        isDark ? AurbitWebTheme.darkSubtext : AurbitWebTheme.lightSubtext;
-    final borderColor =
-        isDark ? AurbitWebTheme.darkBorder : AurbitWebTheme.lightBorder;
-    final inputBg = isDark ? const Color(0xFF1F1F28) : const Color(0xFFF8F9FA);
-    final dividerColor =
-        isDark ? AurbitWebTheme.darkBorder : AurbitWebTheme.lightBorder;
+    final textColor = isDark ? AurbitWebTheme.darkText : const Color(0xFF1A1A2E);
+    final subColor = isDark ? AurbitWebTheme.darkSubtext : const Color(0xFF6B7280);
+    final borderColor = isDark
+        ? Colors.white.withOpacity(0.1)
+        : const Color(0xFFE5E7EB);
+    final inputBg = isDark
+        ? Colors.white.withOpacity(0.06)
+        : Colors.white.withOpacity(0.9);
 
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          if (!isWeb) ...[
-            Align(
-              alignment: Alignment.topRight,
-              child: IconButton(
-                icon: Icon(Icons.support_agent, color: subColor),
-                onPressed: () => _showSnack(
-                  'Write to krishnajithvijay@gmail.com',
-                ),
-              ),
+          // ── Title ──
+          Text(
+            'Welcome 👋',
+            style: GoogleFonts.poppins(
+              fontSize: isWeb ? 28 : 30,
+              fontWeight: FontWeight.w700,
+              color: textColor,
             ),
-            const SizedBox(height: 16),
-          ],
-          if (isWeb) ...[
-            Text(
-              'Welcome back',
-              style: GoogleFonts.inter(
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                color: textColor,
-              ),
+            textAlign: isWeb ? TextAlign.left : TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Login to access your Aurbit account',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: subColor,
+              height: 1.5,
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Choose how you want to sign in.',
-              style: GoogleFonts.inter(fontSize: 14, color: subColor),
-            ),
-            const SizedBox(height: 28),
-          ] else ...[
-            Text(
-              'Welcome back',
-              style: GoogleFonts.inter(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: textColor,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Choose how you want to sign in.',
-              style: GoogleFonts.inter(fontSize: 16, color: subColor),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 36),
-          ],
+            textAlign: isWeb ? TextAlign.left : TextAlign.center,
+          ),
+          const SizedBox(height: 28),
+
+          // ── Mode Toggle ──
           _buildModeToggle(borderColor, inputBg, textColor),
           const SizedBox(height: 24),
+
+          // ── Email Field ──
           _label('Email', subColor),
           const SizedBox(height: 8),
           TextFormField(
@@ -436,19 +492,19 @@ class _LoginScreenState extends State<LoginScreen> {
             autofillHints: const [AutofillHints.email],
             style: GoogleFonts.inter(color: textColor, fontSize: 14),
             validator: (value) {
-              if (!_isValidEmail(value ?? '')) {
-                return 'Valid email required';
-              }
+              if (!_isValidEmail(value ?? '')) return 'Valid email required';
               return null;
             },
             decoration: _inputDecoration(
-              hint: 'aurbit@example.com',
+              hint: 'mail@example.com',
               isDark: isDark,
               fill: inputBg,
               border: borderColor,
             ),
           ),
           const SizedBox(height: 20),
+
+          // ── Password / OTP Section ──
           if (_loginMode == _LoginMode.password) ...[
             _label('Password', subColor),
             const SizedBox(height: 8),
@@ -464,7 +520,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 return null;
               },
               decoration: _inputDecoration(
-                hint: 'Password',
+                hint: '••••••••',
                 isDark: isDark,
                 fill: inputBg,
                 border: borderColor,
@@ -483,38 +539,55 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: _isLoading
-                    ? null
-                    : () {
-                        _showSnack(
-                          'Use the email code option if you need a passwordless sign-in.',
-                        );
-                      },
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  'Prefer a one-time code?',
-                  style: GoogleFonts.inter(
-                    color: AurbitWebTheme.accentPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+
+            // ── Remember Me / Forgot Password ──
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: Checkbox(
+                    value: _rememberMe,
+                    onChanged: (v) => setState(() => _rememberMe = v ?? false),
+                    activeColor: AurbitWebTheme.accentPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    side: BorderSide(color: borderColor, width: 1.5),
                   ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                Text(
+                  'Remember Me',
+                  style: GoogleFonts.inter(fontSize: 13, color: subColor),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: _isLoading
+                      ? null
+                      : () => _switchMode(_LoginMode.emailOtp),
+                  child: Text(
+                    'Forgot Password?',
+                    style: GoogleFonts.inter(
+                      color: AurbitWebTheme.accentPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
+
+            // ── Login Button ──
             _primaryButton(
-              label: 'Sign In',
+              label: 'Login',
               isLoading: _isLoading,
               onPressed: _isLoading ? null : _handlePasswordLogin,
             ),
           ] else ...[
+            // ── OTP Flow ──
             _label(_otpSent ? 'Email code' : 'Passwordless sign-in', subColor),
             const SizedBox(height: 8),
             if (_otpSent) ...[
@@ -524,35 +597,37 @@ class _LoginScreenState extends State<LoginScreen> {
                 autofillHints: const [AutofillHints.oneTimeCode],
                 style: GoogleFonts.inter(color: textColor, fontSize: 14),
                 decoration: _inputDecoration(
-                  hint: 'Enter the code from your email',
+                  hint: 'Enter 6-digit code',
                   isDark: isDark,
                   fill: inputBg,
                   border: borderColor,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               Text(
-                'Use the code from the email, or tap the email link and come back here.',
+                'Check your email for the code or sign-in link.',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   color: subColor,
                   height: 1.5,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               _primaryButton(
-                label: 'Verify Email Code',
+                label: 'Verify Code',
                 isLoading: _isLoading,
                 onPressed: _isLoading ? null : _verifyEmailOtp,
               ),
               const SizedBox(height: 12),
-              TextButton(
-                onPressed: _isLoading ? null : _sendEmailOtp,
-                child: Text(
-                  'Resend code',
-                  style: GoogleFonts.inter(
-                    color: AurbitWebTheme.accentPrimary,
-                    fontWeight: FontWeight.w600,
+              Center(
+                child: TextButton(
+                  onPressed: _isLoading ? null : _sendEmailOtp,
+                  child: Text(
+                    'Resend code',
+                    style: GoogleFonts.inter(
+                      color: AurbitWebTheme.accentPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -561,7 +636,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: inputBg,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: borderColor),
                 ),
                 child: Row(
@@ -574,7 +649,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'We will send a one-time code and sign-in link to this email.',
+                        'We\'ll send a one-time code to your email.',
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           color: textColor,
@@ -585,7 +660,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               _primaryButton(
                 label: 'Send Email Code',
                 isLoading: _isLoading,
@@ -593,51 +668,65 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ],
           ],
+
           const SizedBox(height: 28),
+
+          // ── Divider ──
           Row(
             children: [
-              Expanded(child: Divider(color: dividerColor)),
+              Expanded(child: Divider(color: borderColor)),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Text(
-                  'or continue with',
-                  style: GoogleFonts.inter(color: subColor, fontSize: 12),
+                  'or Sign in with',
+                  style: GoogleFonts.inter(
+                    color: subColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-              Expanded(child: Divider(color: dividerColor)),
+              Expanded(child: Divider(color: borderColor)),
             ],
           ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _socialButton(
-                child: Image.asset(
-                  'asset/google_logo.png',
-                  height: 20,
-                  width: 20,
+          const SizedBox(height: 20),
+
+          // ── Social Login Buttons ──
+          _socialLoginButton(
+            icon: Image.asset(
+              'asset/google_logo.png',
+              height: 20,
+              width: 20,
+              errorBuilder: (_, __, ___) => Text(
+                'G',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF4285F4),
                 ),
-                isDark: isDark,
-                borderColor: borderColor,
-                onTap: _isLoading
-                    ? null
-                    : () => _handleOAuth(OAuthProvider.google),
               ),
-              const SizedBox(width: 16),
-              _socialButton(
-                child: FaIcon(
-                  FontAwesomeIcons.apple,
-                  color: isDark ? Colors.white : Colors.black,
-                  size: 20,
-                ),
-                isDark: isDark,
-                borderColor: borderColor,
-                onTap:
-                    _isLoading ? null : () => _handleOAuth(OAuthProvider.apple),
-              ),
-            ],
+            ),
+            label: 'Continue with Google',
+            isDark: isDark,
+            borderColor: borderColor,
+            onTap: _isLoading ? null : () => _handleOAuth(OAuthProvider.google),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 12),
+          _socialLoginButton(
+            icon: FaIcon(
+              FontAwesomeIcons.apple,
+              color: isDark ? Colors.white : Colors.black,
+              size: 20,
+            ),
+            label: 'Continue with Apple',
+            isDark: isDark,
+            borderColor: borderColor,
+            onTap: _isLoading ? null : () => _handleOAuth(OAuthProvider.apple),
+          ),
+
+          const SizedBox(height: 28),
+
+          // ── Sign Up ──
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -649,9 +738,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const SignupScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const SignupScreen()),
                   );
                 },
                 child: Text(
@@ -670,15 +757,13 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildModeToggle(
-    Color borderColor,
-    Color inputBg,
-    Color textColor,
-  ) {
+  // ─────────────── WIDGET HELPERS ───────────────
+
+  Widget _buildModeToggle(Color borderColor, Color inputBg, Color textColor) {
     return Container(
       decoration: BoxDecoration(
         color: inputBg,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: borderColor),
       ),
       padding: const EdgeInsets.all(4),
@@ -712,7 +797,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required VoidCallback onTap,
   }) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
+      duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         color: selected ? AurbitWebTheme.accentPrimary : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
@@ -730,7 +815,7 @@ class _LoginScreenState extends State<LoginScreen> {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: selected ? Colors.white : textColor.withOpacity(0.78),
+                color: selected ? Colors.white : textColor.withOpacity(0.6),
               ),
             ),
           ),
@@ -762,31 +847,28 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       filled: true,
       fillColor: fill,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 14,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: border),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: border),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(
           color: AurbitWebTheme.accentPrimary,
           width: 2,
         ),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: Colors.red),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: Colors.red, width: 2),
       ),
     );
@@ -798,7 +880,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required VoidCallback? onPressed,
   }) {
     return SizedBox(
-      height: 48,
+      height: 50,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -807,7 +889,7 @@ class _LoginScreenState extends State<LoginScreen> {
           elevation: 0,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
         child: isLoading
@@ -821,17 +903,19 @@ class _LoginScreenState extends State<LoginScreen> {
               )
             : Text(
                 label,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.poppins(
                   fontSize: 15,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
                 ),
               ),
       ),
     );
   }
 
-  Widget _socialButton({
-    required Widget child,
+  Widget _socialLoginButton({
+    required Widget icon,
+    required String label,
     required bool isDark,
     required Color borderColor,
     required VoidCallback? onTap,
@@ -841,17 +925,32 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           onTap: onTap,
           child: Container(
-            width: 64,
-            height: 48,
+            height: 50,
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1F1F28) : const Color(0xFFF8F9FA),
-              borderRadius: BorderRadius.circular(10),
+              color: isDark
+                  ? Colors.white.withOpacity(0.06)
+                  : Colors.white.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: borderColor),
             ),
-            child: Center(child: child),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                icon,
+                const SizedBox(width: 12),
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
