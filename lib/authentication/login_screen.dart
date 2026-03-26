@@ -122,9 +122,15 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleOAuth(OAuthProvider provider) async {
     setState(() => _isLoading = true);
     try {
+      // On mobile, use a custom URL scheme so the browser redirects back to
+      // the app after the user completes sign-in. On web, use the current URL.
+      final redirectUrl = kIsWeb
+          ? _webRedirectTo
+          : 'com.example.aurbitapp://login-callback/';
+
       final launched = await Supabase.instance.client.auth.signInWithOAuth(
         provider,
-        redirectTo: _webRedirectTo,
+        redirectTo: redirectUrl,
         scopes: switch (provider) {
           OAuthProvider.apple => 'name email',
           OAuthProvider.google => 'email profile',
