@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "794737790943",
+    "project_id": "aurbit-6fa76",
+    "storage_bucket": "aurbit-6fa76.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:794737790943:android:ca412351adff5b029a3e6a",
+        "android_client_info": {
+          "package_name": "com.example.aurbitapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnOEw0aOyEpVTbCKqzQYnrOB0RcxnzRHE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

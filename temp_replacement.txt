@@ -1,0 +1,2 @@
+onTap: () => _showUsernameTemporarily(friend.id),
+onLongPress: () => _showMemberActions(friend),

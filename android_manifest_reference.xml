@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+  ANDROID MANIFEST FOR PUSH NOTIFICATIONS
+  
+  This is a complete AndroidManifest.xml file with all required permissions
+  and configurations for Firebase Cloud Messaging (FCM) push notifications.
+  
+  INSTRUCTIONS:
+  1. Backup your current AndroidManifest.xml first!
+  2. Compare this file with your existing android/app/src/main/AndroidManifest.xml
+  3. Add the missing permissions and meta-data tags
+  4. DO NOT copy the entire file - merge the changes carefully
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- ===== PERMISSIONS for Push Notifications ===== -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    
+    <application
+        android:label="Aurbit"
+        android:name="${applicationName}"
+        android:icon="@mipmap/launcher_icon">
+        
+        <!-- ===== MainActivity Configuration ===== -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true">
+            
+            <!-- Don't delete these meta-data tags, they're required -->
+            <meta-data
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme"
+                />
+            
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            
+            <!-- ===== FCM: Intent filter for notification clicks ===== -->
+            <intent-filter>
+                <action android:name="FLUTTER_NOTIFICATION_CLICK" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- ===== FCM META-DATA: Default Notification Channel ===== -->
+        <!-- This must match the channel ID in your Flutter code -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="high_importance_channel" />
+        
+        <!-- ===== FCM META-DATA: Default Notification Icon ===== -->
+        <!-- Uses your app launcher icon by default -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/launcher_icon" />
+        
+        <!-- ===== FCM META-DATA: Default Notification Color ===== -->
+        <!-- Background color for the notification icon -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@android:color/white" />
+
+        <!-- ===== Flutter Embedding ===== -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+            
+        <!-- ===== FCM: Service for handling background messages ===== -->
+        <!-- This is handled by firebase_messaging plugin, no need to add service -->
+        
+    </application>
+</manifest>

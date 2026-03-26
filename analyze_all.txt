@@ -1,0 +1,36 @@
+﻿Analyzing 3 items...                                            
+
+   info - The private field _posts could be 'final' - lib\community\community_feed_screen.dart:37:30 - prefer_final_fields
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\community\community_feed_screen.dart:392:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\community\community_feed_screen.dart:421:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\community\community_feed_screen.dart:424:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\community\community_feed_screen.dart:639:35 - deprecated_member_use
+  error - Expected to find ';' - lib\community\community_feed_screen.dart:1019:7 - expected_token
+warning - Dead code - lib\community\community_feed_screen.dart:1019:8 - dead_code
+  error - Expected an identifier - lib\community\community_feed_screen.dart:1019:8 - missing_identifier
+  error - Unexpected text ';' - lib\community\community_feed_screen.dart:1019:8 - unexpected_token
+warning - The label 'floatingActionButton' isn't used - lib\community\community_feed_screen.dart:1020:7 - unused_label
+  error - Expected to find ';' - lib\community\community_feed_screen.dart:1029:17 - expected_token
+  error - Expected an identifier - lib\community\community_feed_screen.dart:1029:21 - missing_identifier
+  error - Expected to find ';' - lib\community\community_feed_screen.dart:1029:21 - expected_token
+  error - Unexpected text ';' - lib\community\community_feed_screen.dart:1029:21 - unexpected_token
+  error - Expected an identifier - lib\community\community_feed_screen.dart:1030:5 - missing_identifier
+  error - Unexpected text ';' - lib\community\community_feed_screen.dart:1030:5 - unexpected_token
+   info - Unnecessary empty statement - lib\community\community_feed_screen.dart:1030:6 - empty_statements
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\community\community_feed_screen.dart:1208:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\community\community_feed_screen.dart:1208:79 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\community\community_feed_screen.dart:1324:37 - deprecated_member_use
+   info - Unnecessary braces in a string interpolation - lib\community\community_feed_screen.dart:1346:24 - unnecessary_brace_in_string_interps
+   info - Unnecessary braces in a string interpolation - lib\community\community_feed_screen.dart:1346:50 - unnecessary_brace_in_string_interps
+   info - Unnecessary braces in a string interpolation - lib\community\community_feed_screen.dart:1392:14 - unnecessary_brace_in_string_interps
+warning - The value of the local variable 'fullComment' isn't used - lib\community\community_post_detail_screen.dart:271:13 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\community\community_post_detail_screen.dart:391:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\community\community_post_detail_screen.dart:689:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\community\community_post_detail_screen.dart:925:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\community\community_post_detail_screen.dart:925:79 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\space\post_detail_screen.dart:357:35 - deprecated_member_use
+warning - The value of the local variable 'fullComment' isn't used - lib\space\post_detail_screen.dart:450:13 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\space\post_detail_screen.dart:727:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\space\post_detail_screen.dart:968:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\space\post_detail_screen.dart:968:79 - deprecated_member_use
+
