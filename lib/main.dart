@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -6,20 +8,21 @@ import 'authentication/splash_screen.dart';
 import 'authentication/login_screen.dart';
 import 'main screens/main_screen.dart';
 import 'theme/theme_service.dart';
-import 'responsive_layout.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   try {
     await Firebase.initializeApp();
   } catch (e) {
-    debugPrint("Firebase initialization failed (might be missing web config): $e");
+    debugPrint(
+        "Firebase initialization failed (might be missing web config): $e");
   }
-  
+
   await Supabase.initialize(
     url: 'https://henxsgquexgxvfwngjet.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlbnhzZ3F1ZXhneHZmd25namV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5Mjg4NTIsImV4cCI6MjA4NDUwNDg1Mn0.qhovSln6868wGsK-7jqM9D-C2133_Gcpj-E1uX4QHg0',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlbnhzZ3F1ZXhneHZmd25namV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5Mjg4NTIsImV4cCI6MjA4NDUwNDg1Mn0.qhovSln6868wGsK-7jqM9D-C2133_Gcpj-E1uX4QHg0',
   );
 
   await ThemeService().loadTheme();
@@ -28,7 +31,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
 
   const MyApp({super.key});
 
@@ -49,8 +53,13 @@ class MyApp extends StatelessWidget {
               primary: Colors.black,
               surface: Colors.white,
             ),
-            textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme).apply(
-              fontFamilyFallback: ['Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji'],
+            textTheme:
+                GoogleFonts.interTextTheme(ThemeData.light().textTheme).apply(
+              fontFamilyFallback: [
+                'Apple Color Emoji',
+                'Segoe UI Emoji',
+                'Noto Color Emoji'
+              ],
             ),
             useMaterial3: true,
           ),
@@ -62,36 +71,72 @@ class MyApp extends StatelessWidget {
               surface: Color(0xFF121212), // Very dark grey for cards/surfaces
               onSurface: Colors.white,
             ),
-            textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).apply(
-              fontFamilyFallback: ['Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji'],
+            textTheme:
+                GoogleFonts.interTextTheme(ThemeData.dark().textTheme).apply(
+              fontFamilyFallback: [
+                'Apple Color Emoji',
+                'Segoe UI Emoji',
+                'Noto Color Emoji'
+              ],
             ),
             useMaterial3: true,
           ),
-          home: Builder(
-            builder: (context) => SplashScreen(
-              onContinue: () {
-                final session = Supabase.instance.client.auth.currentSession;
-                if (session != null) {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => const MainScreen(),
-                    ),
-                  );
-                } else {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => const LoginScreen(),
-                    ),
-                  );
-                }
-              },
-            ),
-          ),
+          home: const AuthGate(),
         );
       },
     );
   }
 }
+
+class AuthGate extends StatefulWidget {
+  const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  late final StreamSubscription<AuthState> _authSubscription;
+  bool _hasFinishedSplash = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _authSubscription =
+        Supabase.instance.client.auth.onAuthStateChange.listen((_) {
+      if (mounted && _hasFinishedSplash) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_hasFinishedSplash) {
+      return SplashScreen(
+        onContinue: () {
+          if (mounted) {
+            setState(() => _hasFinishedSplash = true);
+          }
+        },
+      );
+    }
+
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      return const LoginScreen();
+    }
+
+    return const MainScreen();
+  }
+}
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 

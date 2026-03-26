@@ -1,0 +1,2 @@
+No MCP servers configured yet. Try `codex mcp add my-tool -- my-command`.
+
