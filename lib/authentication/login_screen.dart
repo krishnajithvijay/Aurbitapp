@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -6,8 +7,17 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/fcm_service.dart';
-import '../web/aurbit_web_theme.dart';
 import 'signup_screen.dart';
+
+// ── Design tokens ──────────────────────────────────────────────────────────
+
+const _kBg = Color(0xFF0A0A0A);
+const _kPurple = Color(0xFF7C3AED);
+const _kIndigo = Color(0xFF6366F1);
+const _kText = Colors.white;
+const _kSubtext = Color(0xFF9CA3AF);
+const _kGlassBorder = Color(0x1AFFFFFF); // white 10%
+const _kGlassBg = Color(0x33000000);    // black 20%
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,49 +27,123 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
+  // Form
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  bool _obscurePassword = true;
   bool _isLoading = false;
-  late AnimationController _shimmerCtrl;
-  late Animation<double> _shimmer;
+
+  // Background animation
+  late final AnimationController _bgCtrl;
+  late final Animation<double> _bgAnim;
 
   @override
   void initState() {
     super.initState();
-    _shimmerCtrl = AnimationController(
+    _bgCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds: 12),
     )..repeat(reverse: true);
-    _shimmer = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _shimmerCtrl, curve: Curves.easeInOut),
-    );
+    _bgAnim = Tween<double>(begin: 0.0, end: 1.0)
+        .animate(CurvedAnimation(parent: _bgCtrl, curve: Curves.easeInOut));
   }
 
   @override
   void dispose() {
-    _shimmerCtrl.dispose();
+    _bgCtrl.dispose();
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
     super.dispose();
   }
 
-  // ───────────────── GOOGLE AUTH ─────────────────
+  // ───────────────── AUTH ─────────────────
+
+  String? get _webRedirectTo {
+    if (!kIsWeb) return null;
+    return Uri.base
+        .replace(queryParameters: <String, String>{}, fragment: '')
+        .toString();
+  }
+
+  Future<void> _signInWithEmail() async {
+    final email = _emailCtrl.text.trim();
+    final password = _passwordCtrl.text;
+    if (email.isEmpty || password.isEmpty) {
+      _showSnack('Please enter your email and password.', isError: true);
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      await _initializeFcm();
+    } on AuthException catch (e) {
+      _showSnack(e.message, isError: true);
+    } catch (_) {
+      _showSnack('Something went wrong. Please try again.', isError: true);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
     try {
-      final redirectUrl = kIsWeb
-          ? _webRedirectTo
-          : 'com.example.aurbitapp://login-callback/';
-
       final launched = await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: redirectUrl,
+        redirectTo: kIsWeb
+            ? _webRedirectTo
+            : 'com.example.aurbitapp://login-callback/',
         scopes: 'email profile',
       );
-
       if (!launched) {
         _showSnack('Unable to start Google sign-in.', isError: true);
       }
-    } on AuthException catch (error) {
-      _showSnack(error.message, isError: true);
+    } on AuthException catch (e) {
+      _showSnack(e.message, isError: true);
+    } catch (_) {
+      _showSnack('Something went wrong. Please try again.', isError: true);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _signInWithApple() async {
+    setState(() => _isLoading = true);
+    try {
+      final launched = await Supabase.instance.client.auth.signInWithOAuth(
+        OAuthProvider.apple,
+        redirectTo: kIsWeb
+            ? _webRedirectTo
+            : 'com.example.aurbitapp://login-callback/',
+      );
+      if (!launched) {
+        _showSnack('Unable to start Apple sign-in.', isError: true);
+      }
+    } on AuthException catch (e) {
+      _showSnack(e.message, isError: true);
+    } catch (_) {
+      _showSnack('Something went wrong. Please try again.', isError: true);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _forgotPassword() async {
+    final email = _emailCtrl.text.trim();
+    if (email.isEmpty) {
+      _showSnack('Enter your email address first, then tap Forgot?', isError: true);
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      await Supabase.instance.client.auth.resetPasswordForEmail(email);
+      _showSnack('Password reset email sent – check your inbox.');
+    } on AuthException catch (e) {
+      _showSnack(e.message, isError: true);
     } catch (_) {
       _showSnack('Something went wrong. Please try again.', isError: true);
     } finally {
@@ -72,17 +156,9 @@ class _LoginScreenState extends State<LoginScreen>
       final fcm = FcmService();
       await fcm.initialize();
       await fcm.saveToken();
-    } catch (error) {
-      debugPrint('FCM init skipped: $error');
+    } catch (e) {
+      debugPrint('FCM init skipped: $e');
     }
-  }
-
-  String? get _webRedirectTo {
-    if (!kIsWeb) return null;
-    final base = Uri.base;
-    return base
-        .replace(queryParameters: <String, String>{}, fragment: '')
-        .toString();
   }
 
   void _showSnack(String message, {bool isError = false}) {
@@ -90,8 +166,7 @@ class _LoginScreenState extends State<LoginScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor:
-            isError ? Colors.red.shade400 : AurbitWebTheme.natureGreen,
+        backgroundColor: isError ? Colors.red.shade400 : _kPurple,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -102,87 +177,246 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isDesktop = kIsWeb && MediaQuery.of(context).size.width >= 800;
-    return isDesktop ? _buildWebLayout(isDark) : _buildMobileLayout(isDark);
-  }
-
-  // ───────────────── WEB LAYOUT ─────────────────
-
-  Widget _buildWebLayout(bool isDark) {
+    final isDesktop = MediaQuery.of(context).size.width >= 800;
     return Scaffold(
+      backgroundColor: _kBg,
       body: Stack(
         children: [
-          // ── Full background gradient ──
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: isDark
-                    ? const [
-                        Color(0xFF1A2A1F),
-                        Color(0xFF0F1A14),
-                        Color(0xFF0D0D12)
-                      ]
-                    : const [
-                        Color(0xFF8BC6A0), // fresh green
-                        Color(0xFFF2CDB4), // warm peach
-                        Color(0xFFF7EDE2), // light beige
-                        Color(0xFFE8C9A0), // sand
-                      ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          // Animated gradient background orbs
+          AnimatedBuilder(
+            animation: _bgAnim,
+            builder: (_, __) => CustomPaint(
+              painter: _NeonOrbsPainter(_bgAnim.value),
+              child: const SizedBox.expand(),
+            ),
+          ),
+
+          // Content
+          SafeArea(
+            child: isDesktop
+                ? _buildDesktopLayout()
+                : _buildMobileLayout(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ───────────────── DESKTOP (two-column) ─────────────────
+
+  Widget _buildDesktopLayout() {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(32),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1100),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(40),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: _kGlassBg,
+                  borderRadius: BorderRadius.circular(40),
+                  border: Border.all(color: _kGlassBorder),
+                ),
+                child: IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Left branding panel
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(64),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.02),
+                            border: const Border(
+                              right: BorderSide(color: _kGlassBorder),
+                            ),
+                          ),
+                          child: _buildBrandingContent(isDesktop: true),
+                        ),
+                      ),
+                      // Right form panel
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 72, vertical: 64),
+                          color: Colors.black.withOpacity(0.25),
+                          child: Center(child: _buildFormContent()),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
 
-          // ── Decorative circles ──
-          if (!isDark) ...[
-            Positioned(
-              top: -100,
-              right: -50,
-              child: _circle(320, AurbitWebTheme.natureGreen.withOpacity(0.12)),
-            ),
-            Positioned(
-              bottom: -120,
-              left: -80,
-              child: _circle(380, AurbitWebTheme.natureTeal.withOpacity(0.10)),
-            ),
-            Positioned(
-              top: 80,
-              left: 60,
-              child: _circle(200, AurbitWebTheme.naturePeach.withOpacity(0.25)),
-            ),
-            Positioned(
-              bottom: 100,
-              right: 350,
-              child: _circle(120, const Color(0xFFD4E7C5).withOpacity(0.3)),
-            ),
-          ],
+  // ───────────────── MOBILE (stacked) ─────────────────
 
-          // ── Logo + Branding (top-left) ──
-          Positioned(
-            left: 56,
-            top: 44,
-            child: _logo(isDark),
-          ),
-
-          // ── Tagline (bottom-left) ──
-          Positioned(
-            left: 56,
-            bottom: 56,
-            child: _tagline(isDark),
-          ),
-
-          // ── Glassmorphism Login Card (right-center) ──
-          Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+  Widget _buildMobileLayout() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(32),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              color: _kGlassBg,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: _kGlassBorder),
+            ),
+            child: Column(
               children: [
+                // Top branding panel
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.02),
+                    border: const Border(
+                      bottom: BorderSide(color: _kGlassBorder),
+                    ),
+                  ),
+                  child: _buildBrandingContent(isDesktop: false),
+                ),
+                // Form panel
                 Padding(
-                  padding: const EdgeInsets.only(right: 72),
-                  child: _glassCard(isDark, maxWidth: 400),
+                  padding: const EdgeInsets.all(32),
+                  child: _buildFormContent(),
+                ),
+                // Mobile footer
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 24, horizontal: 32),
+                  decoration: const BoxDecoration(
+                    border: Border(top: BorderSide(color: _kGlassBorder)),
+                    color: Color(0x0D000000),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _footerLink('HELP'),
+                      const SizedBox(width: 32),
+                      _footerLink('RULES'),
+                    ],
+                  ),
                 ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ───────────────── BRANDING CONTENT ─────────────────
+
+  Widget _buildBrandingContent({required bool isDesktop}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Logo badge
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: _kGlassBorder),
+              ),
+              child: const Center(
+                child: Text(
+                  'A',
+                  style: TextStyle(
+                    color: _kText,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: isDesktop ? 32 : 20),
+
+            // Tagline
+            Text(
+              'Your space.\nYour pace.',
+              style: GoogleFonts.poppins(
+                fontSize: isDesktop ? 60 : 36,
+                fontWeight: FontWeight.w800,
+                color: _kText,
+                height: 1.1,
+                letterSpacing: -1,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Description
+            Text(
+              'Rediscover digital intimacy in an\nenvironment built for presence,\nnot performance.',
+              style: GoogleFonts.inter(
+                fontSize: isDesktop ? 16 : 14,
+                color: _kSubtext,
+                height: 1.7,
+              ),
+            ),
+            SizedBox(height: isDesktop ? 32 : 20),
+
+            // Feature badges
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _featureBadge(Icons.center_focus_strong_outlined, 'Mindful Focus'),
+                _featureBadge(Icons.menu_book_outlined, 'Journal'),
+                _featureBadge(Icons.people_outline, 'Circles'),
+              ],
+            ),
+          ],
+        ),
+
+        if (isDesktop) ...[
+          const SizedBox(height: 48),
+          Row(
+            children: [
+              _footerLink('HELP'),
+              const SizedBox(width: 32),
+              _footerLink('RULES'),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _featureBadge(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(color: _kGlassBorder),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: _kIndigo),
+          const SizedBox(width: 7),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFFE5E7EB),
             ),
           ),
         ],
@@ -190,396 +424,395 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  // ───────────────── MOBILE LAYOUT ─────────────────
-
-  Widget _buildMobileLayout(bool isDark) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isDark
-                ? [const Color(0xFF1A2A1F), const Color(0xFF0D0D12)]
-                : [
-                    const Color(0xFF8BC6A0),
-                    const Color(0xFFF2CDB4),
-                    const Color(0xFFF7EDE2),
-                  ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              const SizedBox(height: 32),
-              _logo(isDark),
-              const Spacer(),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: _glassCard(isDark, maxWidth: double.infinity),
-              ),
-              const SizedBox(height: 24),
-              _taglineMobile(isDark),
-              const SizedBox(height: 32),
-            ],
-          ),
-        ),
+  Widget _footerLink(String label) {
+    return Text(
+      label,
+      style: GoogleFonts.inter(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 2.5,
+        color: const Color(0xFF6B7280),
       ),
     );
   }
 
-  // ───────────────── GLASS CARD ─────────────────
+  // ───────────────── FORM CONTENT ─────────────────
 
-  Widget _glassCard(bool isDark, {required double maxWidth}) {
-    final textColor =
-        isDark ? AurbitWebTheme.darkText : const Color(0xFF1A1A2E);
-    final subColor =
-        isDark ? AurbitWebTheme.darkSubtext : const Color(0xFF6B7280);
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(28),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
-        child: Container(
-          width: maxWidth == double.infinity ? null : maxWidth,
-          constraints: maxWidth == double.infinity
-              ? null
-              : BoxConstraints(maxWidth: maxWidth),
-          padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 44),
-          decoration: BoxDecoration(
-            color: isDark
-                ? Colors.black.withOpacity(0.4)
-                : Colors.white.withOpacity(0.72),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withOpacity(0.08)
-                  : Colors.white.withOpacity(0.6),
+  Widget _buildFormContent() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 420),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Heading
+          Text(
+            'Welcome Aurbitor',
+            style: GoogleFonts.poppins(
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+              color: _kText,
+              height: 1.2,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.06),
-                blurRadius: 48,
-                offset: const Offset(0, 20),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Sign in to your quiet space',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: _kSubtext,
+            ),
+          ),
+          const SizedBox(height: 36),
+
+          // Email field
+          _fieldLabel('Email Address'),
+          const SizedBox(height: 8),
+          _inputField(
+            controller: _emailCtrl,
+            hint: 'name@sanctuary.com',
+            keyboardType: TextInputType.emailAddress,
+          ),
+          const SizedBox(height: 20),
+
+          // Password field
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _fieldLabel('Password'),
+              GestureDetector(
+                onTap: _isLoading ? null : _forgotPassword,
+                child: Text(
+                  'Forgot?',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: _kIndigo,
+                  ),
+                ),
               ),
             ],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          const SizedBox(height: 8),
+          _inputField(
+            controller: _passwordCtrl,
+            hint: 'Enter your password',
+            obscure: _obscurePassword,
+            suffixIcon: GestureDetector(
+              onTap: () =>
+                  setState(() => _obscurePassword = !_obscurePassword),
+              child: Icon(
+                _obscurePassword
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                size: 20,
+                color: const Color(0xFF6B7280),
+              ),
+            ),
+          ),
+          const SizedBox(height: 28),
+
+          // Sign in button
+          _signInButton(),
+          const SizedBox(height: 24),
+
+          // Divider
+          Row(
             children: [
-              // ── Waving hand icon (replaces emoji) ──
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: AurbitWebTheme.accentPrimary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.waving_hand_rounded,
-                    size: 30,
-                    color: AurbitWebTheme.accentPrimary,
+              const Expanded(child: Divider(color: _kGlassBorder)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  'OR CONTINUE WITH',
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.8,
+                    color: const Color(0xFF4B5563),
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const Expanded(child: Divider(color: _kGlassBorder)),
+            ],
+          ),
+          const SizedBox(height: 20),
 
-              // ── Welcome text ──
-              Text(
-                'Welcome to Aurbit',
-                style: GoogleFonts.poppins(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w700,
-                  color: textColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Your quiet space for mindful\ndigital connections',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: subColor,
-                  height: 1.6,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 36),
-
-              // ── Google Sign-in Button ──
-              _googleButton(isDark),
-              const SizedBox(height: 16),
-
-              // ── Divider ──
-              Row(
+          // OAuth buttons
+          LayoutBuilder(
+            builder: (ctx, constraints) {
+              final twoCol = constraints.maxWidth > 320;
+              if (twoCol) {
+                return Row(
+                  children: [
+                    Expanded(child: _oauthButton('Google', _googleIcon(), _signInWithGoogle)),
+                    const SizedBox(width: 12),
+                    Expanded(child: _oauthButton('Apple', _appleIcon(), _signInWithApple)),
+                  ],
+                );
+              }
+              return Column(
                 children: [
-                  Expanded(
-                    child: Divider(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.1)
-                            : const Color(0xFFE5E7EB)),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: Text(
-                      'or',
-                      style: GoogleFonts.inter(
-                        color: subColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                  _oauthButton('Google', _googleIcon(), _signInWithGoogle),
+                  const SizedBox(height: 12),
+                  _oauthButton('Apple', _appleIcon(), _signInWithApple),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 36),
+
+          // Sign up link
+          Center(
+            child: RichText(
+              text: TextSpan(
+                style: GoogleFonts.inter(
+                    fontSize: 14, color: _kSubtext),
+                children: [
+                  const TextSpan(text: 'New to Aurbit? '),
+                  WidgetSpan(
+                    child: GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const SignupScreen()),
+                      ),
+                      child: Text(
+                        'Create an account',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: _kIndigo,
+                          decoration: TextDecoration.underline,
+                          decorationColor: _kIndigo,
+                          decorationThickness: 2,
+                        ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: Divider(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.1)
-                            : const Color(0xFFE5E7EB)),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-
-              // ── Sign Up Button ──
-              SizedBox(
-                height: 52,
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const SignupScreen()),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.15)
-                          : AurbitWebTheme.accentPrimary.withOpacity(0.4),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: Text(
-                    'Create an account',
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AurbitWebTheme.accentPrimary,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // ── Terms text ──
-              Text(
-                'By continuing, you agree to Aurbit\'s\nTerms of Service and Privacy Policy',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: subColor.withOpacity(0.7),
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  // ───────────────── GOOGLE BUTTON ─────────────────
+  // ───────────────── FORM HELPERS ─────────────────
 
-  Widget _googleButton(bool isDark) {
+  Widget _fieldLabel(String label) {
+    return Text(
+      label,
+      style: GoogleFonts.inter(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: const Color(0xFFF3F4F6),
+      ),
+    );
+  }
+
+  Widget _inputField({
+    required TextEditingController controller,
+    required String hint,
+    bool obscure = false,
+    TextInputType? keyboardType,
+    Widget? suffixIcon,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      keyboardType: keyboardType,
+      style: GoogleFonts.inter(color: _kText, fontSize: 15),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle:
+            GoogleFonts.inter(color: const Color(0xFF4B5563), fontSize: 15),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.08),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: _kGlassBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: _kGlassBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: _kPurple, width: 1.5),
+        ),
+        suffixIcon: suffixIcon != null
+            ? Padding(
+                padding: const EdgeInsets.only(right: 14),
+                child: suffixIcon,
+              )
+            : null,
+        suffixIconConstraints: const BoxConstraints(),
+      ),
+    );
+  }
+
+  Widget _signInButton() {
     return SizedBox(
-      height: 54,
       width: double.infinity,
-      child: AnimatedBuilder(
-        animation: _shimmer,
-        builder: (context, child) {
-          return ElevatedButton(
-            onPressed: _isLoading ? null : _signInWithGoogle,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AurbitWebTheme.accentPrimary,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
+      height: 54,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [_kPurple, _kIndigo],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: _kPurple.withOpacity(0.35),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
             ),
-            child: _isLoading
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2.5,
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Google icon
-                      Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'G',
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF4285F4),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Continue with Google',
-                        style: GoogleFonts.poppins(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ],
+          ],
+        ),
+        child: ElevatedButton(
+          onPressed: _isLoading ? null : _signInWithEmail,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+          ),
+          child: _isLoading
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                      color: Colors.white, strokeWidth: 2.5),
+                )
+              : Text(
+                  'Sign in',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
                   ),
-          );
-        },
+                ),
+        ),
       ),
     );
   }
 
-  // ───────────────── HELPERS ─────────────────
-
-  Widget _logo(bool isDark) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: AurbitWebTheme.accentPrimary,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Center(
-            child: Text(
-              'A',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: 20,
+  Widget _oauthButton(String label, Widget icon, VoidCallback onTap) {
+    return SizedBox(
+      height: 52,
+      child: OutlinedButton(
+        onPressed: _isLoading ? null : onTap,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: _kPurple.withOpacity(0.08),
+          side: BorderSide(color: _kPurple.withOpacity(0.25)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            icon,
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: _kText,
               ),
             ),
-          ),
+          ],
         ),
-        const SizedBox(width: 10),
-        Text(
-          'Aurbit',
-          style: GoogleFonts.poppins(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            color: isDark ? Colors.white : AurbitWebTheme.accentPrimary,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _tagline(bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Your space.\nYour pace.',
-          style: GoogleFonts.poppins(
-            fontSize: 44,
-            fontWeight: FontWeight.w800,
-            color: isDark
-                ? Colors.white70
-                : const Color(0xFF2D2D2D).withOpacity(0.18),
-            height: 1.15,
-          ),
-        ),
-        const SizedBox(height: 16),
-        ...['Private by design', 'Mood-aware connections', 'No follower counts']
-            .map(
-          (f) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.check_circle_rounded,
-                    size: 14,
-                    color: isDark
-                        ? Colors.white38
-                        : AurbitWebTheme.natureGreen.withOpacity(0.5)),
-                const SizedBox(width: 8),
-                Text(
-                  f,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: isDark
-                        ? Colors.white38
-                        : const Color(0xFF4A4A4A).withOpacity(0.45),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _taglineMobile(bool isDark) {
-    return Column(
-      children: [
-        ...['Private by design', 'Mood-aware', 'No follower counts'].map(
-          (f) => Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.check_circle_rounded,
-                    size: 12,
-                    color: isDark
-                        ? Colors.white30
-                        : AurbitWebTheme.natureGreen.withOpacity(0.5)),
-                const SizedBox(width: 6),
-                Text(
-                  f,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: isDark ? Colors.white30 : const Color(0xFF4A4A4A).withOpacity(0.4),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _circle(double size, Color color) {
+  Widget _googleIcon() {
     return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+      width: 22,
+      height: 22,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: const Center(
+        child: Text(
+          'G',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFF4285F4),
+          ),
+        ),
+      ),
     );
   }
+
+  Widget _appleIcon() {
+    return const Icon(Icons.apple, size: 22, color: _kText);
+  }
+}
+
+// ───────────────── BACKGROUND PAINTER ─────────────────
+
+class _NeonOrbsPainter extends CustomPainter {
+  final double t;
+  _NeonOrbsPainter(this.t);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Orb 1 – purple top-right
+    _drawOrb(
+      canvas,
+      center: Offset(
+        w * 0.75 + math.sin(t * math.pi) * 40,
+        h * 0.2 + math.cos(t * math.pi) * 30,
+      ),
+      radius: math.min(w, h) * 0.35,
+      color: const Color(0xFF7C3AED).withOpacity(0.18),
+    );
+
+    // Orb 2 – indigo bottom-left
+    _drawOrb(
+      canvas,
+      center: Offset(
+        w * 0.15 + math.cos(t * math.pi) * 35,
+        h * 0.75 + math.sin(t * math.pi) * 25,
+      ),
+      radius: math.min(w, h) * 0.28,
+      color: const Color(0xFF6366F1).withOpacity(0.15),
+    );
+
+    // Orb 3 – pink top-left accent
+    _drawOrb(
+      canvas,
+      center: Offset(
+        w * 0.1 + math.sin(t * math.pi * 1.3) * 20,
+        h * 0.15 + math.cos(t * math.pi * 0.8) * 20,
+      ),
+      radius: math.min(w, h) * 0.18,
+      color: const Color(0xFFF967FB).withOpacity(0.10),
+    );
+  }
+
+  void _drawOrb(Canvas canvas,
+      {required Offset center, required double radius, required Color color}) {
+    final paint = Paint()
+      ..shader = RadialGradient(
+        colors: [color, color.withOpacity(0)],
+      ).createShader(Rect.fromCircle(center: center, radius: radius))
+      ..blendMode = BlendMode.screen;
+    canvas.drawCircle(center, radius, paint);
+  }
+
+  @override
+  bool shouldRepaint(_NeonOrbsPainter old) => old.t != t;
 }
