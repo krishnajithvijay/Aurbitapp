@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -12,11 +13,14 @@ import 'theme/theme_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    await Firebase.initializeApp();
-  } catch (e) {
-    debugPrint(
-        "Firebase initialization failed (might be missing web config): $e");
+  // Firebase is only used for push notifications (mobile).
+  // Skip on web — no firebase_options.dart web config exists.
+  if (!kIsWeb) {
+    try {
+      await Firebase.initializeApp();
+    } catch (e) {
+      debugPrint("Firebase initialization failed: $e");
+    }
   }
 
   await Supabase.initialize(
