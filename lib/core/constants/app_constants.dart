@@ -1,7 +1,7 @@
 class AppConstants {
   // Supabase Configuration
-  static const String supabaseUrl = 'https://henxsgquexgxvfwngjet.supabase.co';
-  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlbnhzZ3F1ZXhneHZmd25namV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5Mjg4NTIsImV4cCI6MjA4NDUwNDg1Mn0.qhovSln6868wGsK-7jqM9D-C2133_Gcpj-E1uX4QHg0';
+  static const String supabaseUrl = 'https://cajrpwygkazwdbcoacvv.supabase.co';
+  static const String supabaseAnonKey = 'sb_publishable_TiFwZVwEVCwWv2Qn-dJiNA_3Jlcq94n';
 
   // App info
   static const String appName = 'Aurbit';
