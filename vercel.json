@@ -1,13 +1,5 @@
 {
-  "version": 2,
-  "installCommand": "bash scripts/install.sh",
-  "buildCommand": "bash scripts/build.sh",
-  "outputDirectory": "build/web",
-  "cleanUrls": true,
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/(.*)", "destination": "/" }
   ]
 }
