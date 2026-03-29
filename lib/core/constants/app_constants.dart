@@ -1,7 +1,7 @@
 class AppConstants {
-  // Replace with your Supabase project URL and anon key
-  static const String supabaseUrl = 'YOUR_SUPABASE_URL';
-  static const String supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
+  // Supabase Configuration
+  static const String supabaseUrl = 'https://henxsgquexgxvfwngjet.supabase.co';
+  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlbnhzZ3F1ZXhneHZmd25namV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5Mjg4NTIsImV4cCI6MjA4NDUwNDg1Mn0.qhovSln6868wGsK-7jqM9D-C2133_Gcpj-E1uX4QHg0';
 
   // App info
   static const String appName = 'Aurbit';
