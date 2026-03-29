@@ -1,33 +1,13 @@
 {
   "version": 2,
-  "installCommand": "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable --depth 1; fi && ./flutter/bin/flutter config --enable-web && ./flutter/bin/flutter pub get",
-  "buildCommand": "./flutter/bin/flutter build web --release",
+  "installCommand": "bash scripts/install.sh",
+  "buildCommand": "bash scripts/build.sh",
   "outputDirectory": "build/web",
   "cleanUrls": true,
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/assets/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
     }
   ]
 }
