@@ -162,6 +162,34 @@ For GitHub Actions builds (`.github/workflows/deploy.yml`), add these repository
   - The workflow falls back to safe dummy values (`https://example.supabase.co`, `dev-anon-key`, `http://localhost:3000`) so CI can still build, but you should set real values for any deploy.
 4. Deploy — Vercel auto-detects Next.js
 
+### Supabase project (cloud-hosted)
+
+If you are using the provided hosted Supabase project, these public values are available
+(anon key is the publishable key shown in Supabase dashboard):
+
+- Project URL: `https://henxsgquexgxvfwngjet.supabase.co`
+- Publishable anon key (client-safe): `sb_publishable_Uohn9LqEZ27DRNzljPSZmg_pmeTeghx`
+- Database connection: `postgresql://postgres:[YOUR-PASSWORD]@db.henxsgquexgxvfwngjet.supabase.co:5432/postgres`
+
+If you use your own project, replace these with your own values.
+
+To link the repo with this Supabase project using the CLI:
+```bash
+supabase login        # once per machine
+supabase init         # writes supabase/config.toml (already included)
+supabase link --project-ref henxsgquexgxvfwngjet
+```
+Then set env vars:
+```bash
+# Frontend
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-publishable-anon-key>
+
+# Backend
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+```
+
 ```bash
 # Or via CLI
 cd frontend && npx vercel --prod
