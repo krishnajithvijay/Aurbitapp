@@ -154,9 +154,11 @@ Open [http://localhost:3000](http://localhost:3000)
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `NEXT_PUBLIC_API_URL` (URL of your deployed backend)
 
-For GitHub Actions builds (`.github/workflows/deploy.yml`), also add these repository secrets:
+For GitHub Actions builds (`.github/workflows/deploy.yml`), add these repository secrets at
+**Repository Settings → Secrets and variables → Actions → New repository secret**:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_API_URL`
 4. Deploy — Vercel auto-detects Next.js
 
 ```bash
