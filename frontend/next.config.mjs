@@ -3,11 +3,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 let supabaseHostname = 'your-project.supabase.co';
 
 if (supabaseUrl) {
-  try {
-    supabaseHostname = new URL(supabaseUrl).hostname;
-  } catch {
-    supabaseHostname = 'your-project.supabase.co';
-  }
+  supabaseHostname = new URL(supabaseUrl).hostname;
 }
 
 const nextConfig = {
