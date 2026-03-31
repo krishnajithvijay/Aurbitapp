@@ -126,7 +126,6 @@ Edit `.env`:
 PORT=3001
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-SUPABASE_ANON_KEY=your-anon-key
 FRONTEND_URL=http://localhost:3000
 ```
 
@@ -180,7 +179,6 @@ railway init && railway up
 **Environment variables** to set on the backend host:
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `SUPABASE_ANON_KEY`
 - `FRONTEND_URL` (your Vercel URL)
 
 ---
