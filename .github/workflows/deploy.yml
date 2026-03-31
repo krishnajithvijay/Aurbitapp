@@ -6,6 +6,25 @@ on:
   workflow_dispatch:
 
 jobs:
+  compare-with-default:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # ensure all refs are present
+
+      - name: Determine default branch
+        id: default_branch
+        run: |
+          DEFAULT_BRANCH=$(git remote show origin | awk '/HEAD branch/ {print $NF}')
+          echo "DEFAULT_BRANCH=$DEFAULT_BRANCH" > $GITHUB_ENV
+
+      - name: Compare with default branch
+        run: |
+          git fetch origin "$DEFAULT_BRANCH"
+          git diff origin/"$DEFAULT_BRANCH"...HEAD
+
   lint-and-build-frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -73,4 +92,3 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: ./frontend
           vercel-args: '--prod'
-
