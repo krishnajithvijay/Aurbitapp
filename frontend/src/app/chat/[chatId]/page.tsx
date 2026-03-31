@@ -88,8 +88,7 @@ export default function ChatRoomPage() {
     const content = newMessage.trim();
     setNewMessage('');
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const msgData: Record<string, any> = {
+    const msgData: Record<string, unknown> = {
       chat_id: chatId,
       sender_id: supabaseUser.id,
       type: 'text',
