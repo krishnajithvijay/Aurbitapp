@@ -159,6 +159,7 @@ For GitHub Actions builds (`.github/workflows/deploy.yml`), add these repository
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `NEXT_PUBLIC_API_URL`
+  - The workflow falls back to safe dummy values (`https://example.supabase.co`, `dev-anon-key`, `http://localhost:3000`) so CI can still build, but you should set real values for any deploy.
 4. Deploy — Vercel auto-detects Next.js
 
 ```bash
