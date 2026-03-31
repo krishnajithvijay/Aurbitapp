@@ -8,11 +8,12 @@ interface CreatePostProps {
   communityId?: string;
 }
 
+const supabase = createClient();
+
 export function CreatePost({ onPost, communityId }: CreatePostProps) {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const { supabaseUser, profile } = useAuth();
-  const supabase = createClient();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -4,12 +4,13 @@ import { createClient } from '@/lib/supabase/client';
 import { Notification } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 
+const supabase = createClient();
+
 export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const { supabaseUser } = useAuth();
-  const supabase = createClient();
 
   useEffect(() => {
     if (!supabaseUser) return;

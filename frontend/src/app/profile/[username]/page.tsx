@@ -8,6 +8,8 @@ import { PostCard } from '@/components/feed/PostCard';
 import { useAuth } from '@/context/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 
+const supabase = createClient();
+
 export default function UserProfilePage() {
   const { username } = useParams<{ username: string }>();
   const [user, setUser] = useState<User | null>(null);
@@ -15,7 +17,6 @@ export default function UserProfilePage() {
   const [orbitStatus, setOrbitStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { supabaseUser } = useAuth();
-  const supabase = createClient();
   const router = useRouter();
 
   useEffect(() => {

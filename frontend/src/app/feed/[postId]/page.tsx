@@ -8,6 +8,8 @@ import { PostCard } from '@/components/feed/PostCard';
 import { useAuth } from '@/context/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 
+const supabase = createClient();
+
 export default function PostDetailPage() {
   const { postId } = useParams<{ postId: string }>();
   const [post, setPost] = useState<Post | null>(null);
@@ -16,7 +18,6 @@ export default function PostDetailPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const { supabaseUser } = useAuth();
-  const supabase = createClient();
   const router = useRouter();
 
   useEffect(() => {

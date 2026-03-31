@@ -16,11 +16,12 @@ const notifIcon: Record<string, string> = {
   default: '🔔',
 };
 
+const supabase = createClient();
+
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const { supabaseUser } = useAuth();
-  const supabase = createClient();
 
   useEffect(() => {
     if (!supabaseUser) return;

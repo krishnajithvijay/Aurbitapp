@@ -7,11 +7,12 @@ import { PostCard } from '@/components/feed/PostCard';
 import { CreatePost } from '@/components/feed/CreatePost';
 import { useAuth } from '@/context/AuthContext';
 
+const supabase = createClient();
+
 export default function FeedPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const { supabaseUser } = useAuth();
-  const supabase = createClient();
 
   const fetchPosts = useCallback(async () => {
     const { data } = await supabase

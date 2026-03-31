@@ -7,11 +7,12 @@ import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/context/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 
+const supabase = createClient();
+
 export default function ChatListPage() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
   const { supabaseUser } = useAuth();
-  const supabase = createClient();
 
   useEffect(() => {
     if (!supabaseUser) return;

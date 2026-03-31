@@ -4,11 +4,12 @@ import { createClient } from '@/lib/supabase/client';
 import { Chat } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 
+const supabase = createClient();
+
 export function useChat() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
   const { supabaseUser } = useAuth();
-  const supabase = createClient();
 
   useEffect(() => {
     if (!supabaseUser) return;

@@ -8,6 +8,8 @@ import { useAuth } from '@/context/AuthContext';
 import { encryptMessage, decryptMessage } from '@/lib/encryption';
 import { formatDistanceToNow } from 'date-fns';
 
+const supabase = createClient();
+
 export default function ChatRoomPage() {
   const { chatId } = useParams<{ chatId: string }>();
   const [chat, setChat] = useState<Chat | null>(null);
@@ -18,7 +20,6 @@ export default function ChatRoomPage() {
   const [otherUser, setOtherUser] = useState<User | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { supabaseUser } = useAuth();
-  const supabase = createClient();
   const router = useRouter();
 
   const scrollToBottom = () => {

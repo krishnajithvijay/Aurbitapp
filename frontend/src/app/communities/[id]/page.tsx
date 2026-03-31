@@ -8,6 +8,8 @@ import { PostCard } from '@/components/feed/PostCard';
 import { CreatePost } from '@/components/feed/CreatePost';
 import { useAuth } from '@/context/AuthContext';
 
+const supabase = createClient();
+
 export default function CommunityDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [community, setCommunity] = useState<Community | null>(null);
@@ -15,7 +17,6 @@ export default function CommunityDetailPage() {
   const [loading, setLoading] = useState(true);
   const [isMember, setIsMember] = useState(false);
   const { supabaseUser } = useAuth();
-  const supabase = createClient();
   const router = useRouter();
 
   useEffect(() => {

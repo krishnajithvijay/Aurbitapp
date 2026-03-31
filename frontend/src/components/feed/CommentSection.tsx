@@ -11,11 +11,12 @@ interface CommentSectionProps {
   onComment?: (comment: PostComment) => void;
 }
 
+const supabase = createClient();
+
 export function CommentSection({ postId, comments, onComment }: CommentSectionProps) {
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const { supabaseUser } = useAuth();
-  const supabase = createClient();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

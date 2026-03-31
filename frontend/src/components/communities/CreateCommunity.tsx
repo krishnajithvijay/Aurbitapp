@@ -8,12 +8,13 @@ interface CreateCommunityProps {
   onCancel?: () => void;
 }
 
+const supabase = createClient();
+
 export function CreateCommunity({ onCreated, onCancel }: CreateCommunityProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [creating, setCreating] = useState(false);
   const { supabaseUser } = useAuth();
-  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

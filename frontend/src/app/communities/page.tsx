@@ -6,6 +6,8 @@ import { Community } from '@/types';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/context/AuthContext';
 
+const supabase = createClient();
+
 export default function CommunitiesPage() {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +16,6 @@ export default function CommunitiesPage() {
   const [newDesc, setNewDesc] = useState('');
   const [creating, setCreating] = useState(false);
   const { supabaseUser } = useAuth();
-  const supabase = createClient();
 
   useEffect(() => { loadCommunities(); }, []);
 

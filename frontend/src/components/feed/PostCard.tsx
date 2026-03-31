@@ -11,11 +11,12 @@ interface PostCardProps {
   onUpdate?: (post: Post) => void;
 }
 
+const supabase = createClient();
+
 export function PostCard({ post, onUpdate }: PostCardProps) {
   const { supabaseUser } = useAuth();
   const [isLiked, setIsLiked] = useState(post.is_liked ?? false);
   const [likesCount, setLikesCount] = useState(post.likes_count);
-  const supabase = createClient();
 
   const toggleLike = async () => {
     if (!supabaseUser) return;

@@ -4,11 +4,12 @@ import { createClient } from '@/lib/supabase/client';
 import { Post } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 
+const supabase = createClient();
+
 export function useFeed() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const { supabaseUser } = useAuth();
-  const supabase = createClient();
 
   const fetchPosts = useCallback(async () => {
     const { data } = await supabase

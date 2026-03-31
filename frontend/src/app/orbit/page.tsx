@@ -6,6 +6,8 @@ import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 
+const supabase = createClient();
+
 export default function OrbitPage() {
   const [orbitUsers, setOrbitUsers] = useState<User[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Orbit[]>([]);
@@ -13,7 +15,6 @@ export default function OrbitPage() {
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const { supabaseUser } = useAuth();
-  const supabase = createClient();
   const router = useRouter();
 
   useEffect(() => {

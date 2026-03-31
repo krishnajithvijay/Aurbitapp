@@ -11,6 +11,8 @@ interface ChatRoomProps {
   otherUser: User | null;
 }
 
+const supabase = createClient();
+
 export function ChatRoom({ chatId, otherUser }: ChatRoomProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [decryptedMessages, setDecryptedMessages] = useState<Map<string, string>>(new Map());
@@ -18,7 +20,6 @@ export function ChatRoom({ chatId, otherUser }: ChatRoomProps) {
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { supabaseUser } = useAuth();
-  const supabase = createClient();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
