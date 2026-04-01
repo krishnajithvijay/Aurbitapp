@@ -1,0 +1,18 @@
+## Supabase CLI config intentionally points to the hosted project for this demo.
+## See README "Supabase project (cloud-hosted)" for details before running CLI commands.
+project_id = "henxsgquexgxvfwngjet"
+
+[api]
+port = 54321
+
+[db]
+port = 54322
+
+[studio]
+port = 54323
+
+[inbucket]
+port = 54324
+
+[edge_runtime]
+port = 54325
